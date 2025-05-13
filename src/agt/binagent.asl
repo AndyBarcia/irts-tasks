@@ -26,7 +26,12 @@ binnumber(6,binagent6).
  <- .my_name(Agent);
     ?binnumber(N,Agent);
 	+binnumber(N);
-    .print("Bin agent ", N, " started.");
+    .concat("bin",N,ArtName);
+    // Create bin artifact number N
+    makeArtifact(ArtName,"cenv.BinArt", [N], BinN);
+    // Focus on bin artifact so that binfull belief is mapped to our belief state.
+    focus(BinN);
+    .print("Bin agent ", N, " started with artifact ", ArtName);
 	!refill.
 
 +!refill : true
@@ -36,5 +41,6 @@ binnumber(6,binagent6).
 	.print("Bin agent ",N," waiting ",X*T div 1000, " seconds for new parts...");
     .wait(X*T);
 	.print("Bin agent ",N," has received new parts.");
-    refill_bin(N).
-                       
+    refill_bin.
+
+

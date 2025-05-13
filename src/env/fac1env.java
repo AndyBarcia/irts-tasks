@@ -2,7 +2,7 @@
 // 07 October 2021
 // Contact: benjamin.schlup@schlup.com
 
-// Note this is a very limited environment just for experimenting
+package src.env;
 
 import jason.asSyntax.*;
 
@@ -10,7 +10,7 @@ import jason.environment.*;
 
 import jason.asSyntax.parser.*;
 
-
+import jaca.CartagoEnvironment;
 
 import java.util.logging.*;
 
@@ -54,10 +54,10 @@ public class fac1env extends Environment {
 	
     private Logger logger = Logger.getLogger("factory1.mas2j."+fac1env.class.getName());
 
+    private CartagoEnvironment cartagoEnv;
 
-
-    private FactoryModel model;
-    private FactoryView  view;
+    public FactoryModel model;
+    public FactoryView  view;
 	
     /** Called before the MAS execution with the args informed in .mas2j */
 
@@ -72,10 +72,13 @@ public class fac1env extends Environment {
         view  = new FactoryView(model);
         model.setView(view);
         updatePercepts();
-	
+		startCartago(args);
     }
 
-
+	public void startCartago(String[] args) {
+        cartagoEnv = new CartagoEnvironment();
+        cartagoEnv.init(args);
+    }
 
     @Override
 
@@ -88,9 +91,6 @@ public class fac1env extends Environment {
 	    	if (action.getFunctor().equals("pick_part")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 model.pickPart(ag,x);
-	    	} else if (action.getFunctor().equals("refill_bin")) {
-                int x = (int)((NumberTerm)action.getTerm(0)).solve();
-                model.refillBin(x);
 	    	} else if (action.equals(Literal.parseLiteral("release_part"))) {
                 model.releasePart(ag);
 	    	} else if (action.getFunctor().equals("hold_part")) {
@@ -153,6 +153,8 @@ public class fac1env extends Environment {
 		for (int i=0; i<joints; i++) {
 			addPercept(Literal.parseLiteral("jointPosition("+Integer.toString(i+1)+","+Integer.toString(jointPositions[i][0])+","+Integer.toString(jointPositions[i][1])+")"));
 		}
+
+		/*
 		for (int i=0; i<bins; i++) {
 			Literal percept = Literal.parseLiteral("binfull("+Integer.toString(i+1)+")");
 			if (model.binfull[i]) {
@@ -160,8 +162,7 @@ public class fac1env extends Environment {
 			} else {
 				removePercept(percept);
 			}
-		}
-		
+		}*/
 	
 		// Update gripper percept
 		Literal newGripperPercept = Literal.parseLiteral("gripper("+Integer.toString(model.gripperPosition[0])+","+Integer.toString(model.gripperPosition[1])+","+Integer.toString(model.gripperAngle)+")");
@@ -189,9 +190,9 @@ public class fac1env extends Environment {
 		
     }
 
-    class FactoryModel {
+    public class FactoryModel {
         
-		public Boolean[] binfull = new Boolean[bins];
+		//public Boolean[] binfull = new Boolean[bins];
 		public int gripperPart = -1;    // gripper does not hold anything
 		public int gripperAngle = 90;   // initial gripper angle
 		public boolean welding = false; // welder not in action
@@ -209,7 +210,7 @@ public class fac1env extends Environment {
         Random random = new Random(System.currentTimeMillis());
 
         private FactoryModel() {
-            Arrays.fill(binfull, Boolean.FALSE);
+            //Arrays.fill(binfull, Boolean.FALSE);
 			Arrays.fill(holding, Boolean.FALSE);
 			Arrays.fill(joint, Boolean.FALSE);
 			Arrays.fill(lockArea, Boolean.FALSE);
@@ -229,7 +230,7 @@ public class fac1env extends Environment {
 			           gripperPosition[0] == binPositions[partnum-1][0] &&
 					   gripperPosition[1] == binPositions[partnum-1][1]) {
 				gripperPart = partnum;
-				binfull[partnum-1] = false;
+				//binfull[partnum-1] = false;
 			}
         }
 		
@@ -308,10 +309,10 @@ public class fac1env extends Environment {
 			
         }
 
-        void refillBin(int x) {
+        /*void refillBin(int x) {
 			binfull[x-1] = true;
 			logger.info("executing refill!");
-        }
+        }*/
 		
         void lockArea(int area) {
 			lockArea[area-1] = true;
@@ -336,7 +337,7 @@ public class fac1env extends Environment {
 
     }
     
-    class FactoryView extends JFrame {
+    public class FactoryView extends JFrame {
 
 		JFrame frame = new JFrame("Assembly Factory");
 
@@ -416,6 +417,7 @@ public class fac1env extends Environment {
 			}
 			
 			// Paint bin status
+			/*
 			for (int i=1; i<=bins; i++) {
      			gg.setColor(Color.lightGray);
 				gg.setStroke(new BasicStroke(2));
@@ -425,6 +427,8 @@ public class fac1env extends Environment {
 				gg.drawString("Bin "+Integer.toString(i), 10,510+i*30);
 				if (model.binfull[i-1]) paintPart(gg, i, 90, binPositions[i-1][0], binPositions[i-1][1]);
 			}
+			*/
+			
 			
 			// Paint holder status
 			for (int i=0; i<parts; i++) {
@@ -514,6 +518,8 @@ public class fac1env extends Environment {
     public void stop() {
 
         super.stop();
+		if (cartagoEnv != null)
+            cartagoEnv.stop();
 
     }
 

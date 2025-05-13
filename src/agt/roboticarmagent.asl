@@ -15,8 +15,28 @@ waitingposition(270,613,90).
 !start.
 +!start : true
 <- .print("Robotic arm agent: Hello!");
+   .wait(1000);
+   ?setupTools;
    !positionParts.
-   
+
++?setupTools : true
+<- .print("Setting up tools...");
+   lookupArtifact("bin1",IDbin1);
+   focus(IDbin1);
+   lookupArtifact("bin2",IDbin2);
+   focus(IDbin2);
+   lookupArtifact("bin3",IDbin3);
+   focus(IDbin3);
+   lookupArtifact("bin4",IDbin4);
+   focus(IDbin4);
+   lookupArtifact("bin5",IDbin5);
+   focus(IDbin5).
+
+-?setupTools : true
+<- .print("Errror setting up tools. Retrying...");
+   .wait(1000);
+   ?setupTools.
+
 // Intentionally individual plans per part to make sure we process parts
 // in a preferred sequence. A generic plan resulted in suboptimal 
 // sequence, so that the welding robot could not start at the earliest
@@ -102,7 +122,11 @@ waitingposition(270,613,90).
    .print("Robotic arm agent: picking part from bin ", Part, ".");
    ?binPosition(Part,X1,Y1);
    !moveTo(X1,Y1,90);
-   pick_part(Part).
+   pick_part(Part);
+   // Get the artifact ID of the bin and send the empty action.
+   .concat("bin",Part,ArtName);
+   lookupArtifact(ArtName,BinID);
+   empty[artifact_id(BinID)].
 
 // The sub-plan to actually position the part in a holder unless the holder
 // confirms (via percept) it has fixed the part
